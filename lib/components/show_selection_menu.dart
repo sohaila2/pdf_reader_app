@@ -1,14 +1,18 @@
+import 'dart:io';
+import 'package:path/path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pdf_reader_app/bloc/pdf_file/pdf_cubit.dart';
 
 import '../model/pdf_file.dart';
 import '../services/pdf_services.dart';
 
 class ShowSelectionMenu extends StatelessWidget {
-  const ShowSelectionMenu({super.key, required this.pdfFile});
+  const ShowSelectionMenu({super.key, required this.pdfFile, required this.pdfList});
 
   final PDFFile pdfFile;
+  final List<PDFFile> pdfList;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +68,7 @@ class ShowSelectionMenu extends StatelessWidget {
                   ],
                 ),
                 onTap: () {
-
+                  launchSocialMediaAppIfInstalled('mailto:?subject=Subject&body=Body');
                 },
               ),
               ListTile(
@@ -97,9 +101,25 @@ class ShowSelectionMenu extends StatelessWidget {
                     Text('Copy'),
                   ],
                 ),
-                onTap: () {
+                onTap: () async {
+        String originalPath = pdfFile.path;
+        String originalFileName = pdfFile.name;
+        Directory documentsDirectory = await getApplicationDocumentsDirectory();
 
-                },
+        String newFilePath = join(documentsDirectory.path, 'copied_$originalFileName');
+
+        try {
+        await File(originalPath).copy(newFilePath);
+       // print('PDF copied successfully to $newFilePath');
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('PDF copied successfully')));
+
+        } catch (e) {
+     //   print('Error copying PDF: $e');
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error coping PDF')));
+
+        }
+        },
               ),
               ListTile(
                 title: Row(
@@ -116,7 +136,7 @@ class ShowSelectionMenu extends StatelessWidget {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  pdf.deletePDFFile(pdfFile);
+                  pdf.deletePDFFile(pdfFile,pdfList);
                 },
               ),
             ],

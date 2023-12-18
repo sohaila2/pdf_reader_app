@@ -17,7 +17,26 @@ class PdfCubit extends Cubit<PdfState> {
   List<PDFFile> pdfFiles = [];
   List<PDFFile> favoriteFiles = [];
   List<PDFFile> recentFiles = [];
+  List<PDFFile> searchResults = [];
+  TextEditingController searchController = TextEditingController();
+  bool isSearchVisible = false;
 
+  void searchPDFFiles(String query) {
+    if (query.isEmpty) {
+      emit(SearchResults());
+    } else {
+      searchResults = pdfFiles
+          .where((file) => file.name.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+      emit(SearchResults());
+    }
+  }
+
+
+  void toggleSearchVisibility() {
+      isSearchVisible = !isSearchVisible;
+    emit(ToggleSearch());
+  }
 
   void initState() {
     Future.delayed(Duration.zero, () {
@@ -36,6 +55,7 @@ class PdfCubit extends Cubit<PdfState> {
           .toList();
     }
     emit(LoadPDF());
+
   }
 
   Future<void> loadRecentlyOpenedPaths() async {
@@ -49,6 +69,7 @@ class PdfCubit extends Cubit<PdfState> {
   }
 
   Future<void> pickPDFFiles() async {
+
     List<PlatformFile> pickedFiles = await pickPDFFilesFromPlatform();
 
     if (pickedFiles.isNotEmpty) {
@@ -84,10 +105,11 @@ class PdfCubit extends Cubit<PdfState> {
     openPDFFile(pdfFile.path, context);
   }
 
-  void deletePDFFile(PDFFile pdfFile) {
-    pdfFiles.remove(pdfFile);
-    savePDFFiles(pdfFiles);
+  void deletePDFFile(PDFFile pdfFile, List<PDFFile> pdfList) {
+    pdfList.remove(pdfFile);
+    savePDFFiles(pdfList);
     emit(DeletePDf());
   }
+
 
 }

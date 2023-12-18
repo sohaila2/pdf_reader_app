@@ -16,16 +16,7 @@ import 'favorites_view.dart';
 class HomeView extends StatelessWidget {
   static const String id = "HomeView";
 
-  const HomeView({super.key});
-
-  void showSelectionMenu(BuildContext context, PDFFile pdfFile) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return ShowSelectionMenu(pdfFile: pdfFile);
-      },
-    );
-  }
+   HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +25,41 @@ class HomeView extends StatelessWidget {
       backgroundColor: Colors.red,
       body: Column(
         children: [
-          const ToolsContainer(title: "All Files"),
+        const ToolsContainer(title: "All Files"),
           Expanded(
             child: BlocBuilder<PdfCubit, PdfState>(
               builder: (context, state) {
+              if(state is SearchResults && pdf.searchController.text.isNotEmpty){
+                return Container(
+                  decoration: BoxDecoration(
+                    color: kSecondColor,
+                    borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16.0),
+                        topRight: Radius.circular(16.0)),
+                  ),
+                  child: ListView.builder(
+                    itemCount: pdf.searchResults.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: PDFListRow(
+                          text: pdf.searchResults[index].name,
+                          isFavorite: pdf.searchResults[index].isFavorite,
+                          onFavoritePressed: () {
+                            pdf.toggleFavorite(pdf.searchResults[index]);
+                          },
+                          onMorePressed: () {
+                            showSelectionMenu(context, pdf.searchResults[index], pdf.searchResults);
+                          },
+                        ),
+                        onTap: () {
+                          pdf.openPDFFile(pdf.searchResults[index].path, context);
+                        },
+                      );
+                    },
+                  ),
+                );
+              }
+              else{
                 return Container(
                   decoration: BoxDecoration(
                     color: kSecondColor,
@@ -56,7 +78,7 @@ class HomeView extends StatelessWidget {
                             pdf.toggleFavorite(pdf.pdfFiles[index]);
                           },
                           onMorePressed: () {
-                            showSelectionMenu(context, pdf.pdfFiles[index]);
+                            showSelectionMenu(context, pdf.pdfFiles[index], pdf.pdfFiles);
                           },
                         ),
                         onTap: () {
@@ -66,6 +88,7 @@ class HomeView extends StatelessWidget {
                     },
                   ),
                 );
+              }
               },
             ),
           ),
@@ -75,7 +98,12 @@ class HomeView extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 28.0, right: 20.0),
         child: FloatingActionButton(
           backgroundColor: Colors.red,
-          onPressed: () {
+          onPressed: () async{
+            if(await Permission.storage.request().isDenied)
+              {
+                await requestPermission(context);
+              }
+
             pdf.pickPDFFiles();
           },
           child: const Icon(

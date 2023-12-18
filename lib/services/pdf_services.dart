@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../components/show_selection_menu.dart';
 import '../components/show_share_menu.dart';
 import '../model/pdf_file.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 Future<List<String>> getStoredPDFFiles() async {
@@ -54,11 +55,11 @@ void showShareMenu(BuildContext context) {
 }
 
 
-void showSelectionMenu(BuildContext context, PDFFile pdfFile) {
+void showSelectionMenu(BuildContext context, PDFFile pdfFile, List<PDFFile> pdfList) {
   showModalBottomSheet(
     context: context,
     builder: (BuildContext context) {
-      return ShowSelectionMenu(pdfFile: pdfFile);
+      return ShowSelectionMenu(pdfFile: pdfFile, pdfList: pdfList);
     },
   );
 }
@@ -81,4 +82,15 @@ void showSettingsDialog(BuildContext context) {
       );
     },
   );
+}
+Future<void> launchSocialMediaAppIfInstalled(String url) async {
+  try {
+    bool launched = await launch(url, forceSafariVC: false);
+
+    if (!launched) {
+      launch(url);
+    }
+  } catch (e) {
+    launch(url);
+  }
 }

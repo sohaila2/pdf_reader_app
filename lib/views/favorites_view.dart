@@ -20,76 +20,116 @@ class FavoritesView extends StatelessWidget {
     PdfCubit pdf = PdfCubit.get(context);
 
     pdf.favoriteFiles =
-    pdf.pdfFiles.where((file) => file.isFavorite).toList();
+        pdf.pdfFiles.where((file) => file.isFavorite).toList();
     return Scaffold(
-      backgroundColor: Colors.red,
-      body: Column(
-        children: [
-          ToolsContainer(
-            title: "Favorites",
-          ),
-          Expanded(
-            child: BlocBuilder<PdfCubit, PdfState>(
-              builder: (context, state) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Color(0xfff8e4e1),
-                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(16.0),topRight: Radius.circular(16.0)),
-                  ),
-                  child: ListView.builder(
-                    itemCount: pdf.favoriteFiles.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: PDFListRow(
-                          text: pdf.favoriteFiles[index].name,
-                          isFavorite: pdf.favoriteFiles[index].isFavorite,
-                          onFavoritePressed: () {
-                            pdf.toggleFavorite(pdf.favoriteFiles[index]);
-                          },
-                          onMorePressed: () {
-                           showSelectionMenu(context, pdf.favoriteFiles[index]);
-                          },
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  PDFViewerScreen(
-                                      pdf.favoriteFiles[index].path, pdf.pdfFiles),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                );
-              },
+        backgroundColor: Colors.red,
+        body: Column(
+          children: [
+            ToolsContainer(
+              title: "Favorites",
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-            currentIndex: 2,
-            onTabTapped: (index) {
-              if (index == 0) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const HomeView(),
-                  ),
-                );
-              } else if (index == 1) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        RecentView(),
-                  ),
-                );
-              }
-            },
-          )
+            Expanded(
+              child: BlocBuilder<PdfCubit, PdfState>(
+                builder: (context, state) {
+                  return BlocBuilder<PdfCubit, PdfState>(
+
+                    builder: (context, state) {
+                      if(state is SearchResults && pdf.searchController.text.isNotEmpty)
+                   {
+                     return Container(
+                       decoration: BoxDecoration(
+                         color: Color(0xfff8e4e1),
+                         borderRadius: const BorderRadius.only(
+                             topLeft: Radius.circular(16.0),
+                             topRight: Radius.circular(16.0)),
+                       ),
+                       child: ListView.builder(
+                         itemCount: pdf.searchResults.length,
+                         itemBuilder: (context, index) {
+                           return ListTile(
+                             title: PDFListRow(
+                               text: pdf.searchResults[index].name,
+                               isFavorite: pdf.searchResults[index].isFavorite,
+                               onFavoritePressed: () {
+                                 pdf.toggleFavorite(pdf.searchResults[index]);
+                               },
+                               onMorePressed: () {
+                                 showSelectionMenu(context, pdf.searchResults[index], pdf.searchResults);
+                               },
+                             ),
+                             onTap: () {
+                               pdf.openPDFFile(pdf.searchResults[index].path, context);
+                             },
+                           );
+                         },
+                       ),
+                     );
+                   }else{
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Color(0xfff8e4e1),
+                            borderRadius: const BorderRadius.only(topLeft: Radius
+                                .circular(16.0), topRight: Radius.circular(16.0)),
+                          ),
+                          child: ListView.builder(
+                            itemCount: pdf.favoriteFiles.length,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                title: PDFListRow(
+                                  text: pdf.favoriteFiles[index].name,
+                                  isFavorite: pdf.favoriteFiles[index].isFavorite,
+                                  onFavoritePressed: () {
+                                    pdf.toggleFavorite(pdf.favoriteFiles[index]);
+                                  },
+                                  onMorePressed: () {
+                                    showSelectionMenu(
+                                        context, pdf.favoriteFiles[index], pdf.favoriteFiles);
+                                  },
+                                ),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          PDFViewerScreen(
+                                              pdf.favoriteFiles[index].path,
+                                              pdf.pdfFiles),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: CustomBottomNavigationBar(
+          currentIndex: 2,
+          onTabTapped: (index) {
+            if (index == 0) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HomeView(),
+                ),
+              );
+            } else if (index == 1) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      RecentView(),
+                ),
+              );
+            }
+          },
+        )
     );
   }
 }
